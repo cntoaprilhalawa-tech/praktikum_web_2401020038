@@ -136,20 +136,21 @@ Route::get('/mahasiswa', function (Request $request) {
 
 Route::post('/mahasiswa', function (Request $request) {
     $data = $request->validate([
-        'nim' => ['required', 'string', 'max:20'],
+        'nim' => ['required', 'string', 'max:10'],
         'nama' => ['required', 'string', 'max:100'],
         'email' => ['required', 'email', 'max:100'],
-        'usia' => ['required', 'integer', 'min:15', 'max:100'],
+        'usia' => ['required', 'integer', 'min:17', 'max:60'],
         'program_studi_id' => ['required', 'integer', 'exists:program_studi,id'],
     ], [
         'nim.required' => 'NIM wajib diisi.',
+        'nim.max' => 'NIM maksimal 10 karakter.',
         'nama.required' => 'Nama wajib diisi.',
         'email.required' => 'Email wajib diisi.',
         'email.email' => 'Format email tidak valid.',
         'usia.required' => 'Usia wajib diisi.',
         'usia.integer' => 'Usia harus berupa angka.',
-        'usia.min' => 'Usia minimal 15 tahun.',
-        'usia.max' => 'Usia maksimal 100 tahun.',
+        'usia.min' => 'Usia minimal 17 tahun.',
+        'usia.max' => 'Usia maksimal 60 tahun.',
         'program_studi_id.required' => 'Program studi wajib dipilih.',
         'program_studi_id.exists' => 'Program studi yang dipilih tidak valid.',
     ]);

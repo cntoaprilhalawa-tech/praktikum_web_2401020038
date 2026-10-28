@@ -44,6 +44,26 @@
         <button type="submit">Tambah Data</button>
     </form>
 
+    <h2>Pencarian dan Filter</h2>
+    <form action="{{ route('mahasiswa.index') }}" method="GET">
+        <p>Kata Kunci<br>
+            <input type="text" name="q" value="{{ $kataKunci }}">
+        </p>
+        <p>Program Studi<br>
+            <select name="program_studi_id">
+                <option value="">-- Semua Program Studi --</option>
+                @foreach ($daftarProgramStudi as $programStudi)
+                    <option value="{{ $programStudi['id'] }}"
+                        @selected((string) $programStudiId === (string) $programStudi['id'])>
+                        {{ $programStudi['nama_prodi'] }}
+                    </option>
+                @endforeach
+            </select>
+        </p>
+        <button type="submit">Cari</button>
+        <a href="{{ route('mahasiswa.index') }}">Reset</a>
+    </form>
+
     <h2>Daftar Mahasiswa</h2>
     <table border="1" cellpadding="6" cellspacing="0">
         <tr>

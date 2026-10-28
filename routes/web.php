@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 Route::get('/', function () {
     return view('welcome');
 });
+
 Route::get('/latihan-php', function () {
     $nama = 'Cinto Aprilman Halawa';
     $nilai = [80, 75, 90, 65, 88];
@@ -73,36 +74,55 @@ Route::post('/form-mahasiswa', function (Request $request) {
 
     return view('hasil-form', ['data' => $data]);
 });
-Route::get('/mahasiswa', function () {
+
+Route::get('/mahasiswa', function (Request $request) {
+    $kataKunci = trim((string) $request->query('q', ''));
+    $programStudiId = $request->query('program_studi_id', '');
+
     try {
         $pdo = DB::connection()->getPdo();
 
-        $pernyataanMahasiswa = $pdo->prepare(
-            'SELECT m.nim, m.nama, m.email, m.usia,
-                    p.nama_prodi
-             FROM mahasiswa AS m
-             JOIN program_studi AS p
-               ON p.id = m.program_studi_id
-             ORDER BY m.nim'
-        );
-        $pernyataanMahasiswa->execute();
-        $daftarMahasiswa = $pernyataanMahasiswa->fetchAll(
-            \PDO::FETCH_ASSOC
-        );
+        $sql = 'SELECT m.id, m.nim, m.nama, m.email, m.usia,
+                       m.program_studi_id, p.nama_prodi
+                FROM mahasiswa AS m
+                JOIN program_studi AS p
+                  ON p.id = m.program_studi_id
+                WHERE 1 = 1';
+        $parameter = [];
 
-        $pernyataanProdi = $pdo->prepare(
+        if ($kataKunci !== '') {
+            $sql .= ' AND (m.nim LIKE :kata_kunci_nim
+                      OR m.nama LIKE :kata_kunci_nama
+                      OR m.email LIKE :kata_kunci_email)';
+            $nilaiPencarian = '%' . $kataKunci . '%';
+            $parameter['kata_kunci_nim'] = $nilaiPencarian;
+            $parameter['kata_kunci_nama'] = $nilaiPencarian;
+            $parameter['kata_kunci_email'] = $nilaiPencarian;
+        }
+
+        if ($programStudiId !== '') {
+            $sql .= ' AND m.program_studi_id = :program_studi_id';
+            $parameter['program_studi_id'] = (int) $programStudiId;
+        }
+
+        $sql .= ' ORDER BY m.nim';
+        $ambilMahasiswa = $pdo->prepare($sql);
+        $ambilMahasiswa->execute($parameter);
+        $daftarMahasiswa = $ambilMahasiswa->fetchAll(\PDO::FETCH_ASSOC);
+
+        $ambilProdi = $pdo->prepare(
             'SELECT id, nama_prodi
              FROM program_studi
              ORDER BY nama_prodi'
         );
-        $pernyataanProdi->execute();
-        $daftarProgramStudi = $pernyataanProdi->fetchAll(
-            \PDO::FETCH_ASSOC
-        );
+        $ambilProdi->execute();
+        $daftarProgramStudi = $ambilProdi->fetchAll(\PDO::FETCH_ASSOC);
 
         return view('mahasiswa', compact(
             'daftarMahasiswa',
-            'daftarProgramStudi'
+            'daftarProgramStudi',
+            'kataKunci',
+            'programStudiId'
         ));
     } catch (\Throwable $error) {
         report($error);
@@ -116,22 +136,22 @@ Route::get('/mahasiswa', function () {
 
 Route::post('/mahasiswa', function (Request $request) {
     $data = $request->validate([
-        'nim' => ['required', 'string', 'max:10'],
+        'nim' => ['required', 'string', 'max:20'],
         'nama' => ['required', 'string', 'max:100'],
         'email' => ['required', 'email', 'max:100'],
-        'usia' => ['required', 'integer', 'min:17', 'max:60'],
-        'program_studi_id' => ['required', 'integer'],
+        'usia' => ['required', 'integer', 'min:15', 'max:100'],
+        'program_studi_id' => ['required', 'integer', 'exists:program_studi,id'],
     ], [
         'nim.required' => 'NIM wajib diisi.',
-        'nim.max' => 'NIM maksimal 10 karakter.',
         'nama.required' => 'Nama wajib diisi.',
         'email.required' => 'Email wajib diisi.',
         'email.email' => 'Format email tidak valid.',
         'usia.required' => 'Usia wajib diisi.',
         'usia.integer' => 'Usia harus berupa angka.',
-        'usia.min' => 'Usia minimal 17 tahun.',
-        'usia.max' => 'Usia maksimal 60 tahun.',
+        'usia.min' => 'Usia minimal 15 tahun.',
+        'usia.max' => 'Usia maksimal 100 tahun.',
         'program_studi_id.required' => 'Program studi wajib dipilih.',
+        'program_studi_id.exists' => 'Program studi yang dipilih tidak valid.',
     ]);
 
     try {

@@ -93,7 +93,7 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="6">Data belum tersedia.</td></tr>
+            <tr><td colspan="6">data tidak ditemukan.</td></tr>
         @endforelse
     </table>
 </body>
